@@ -4,25 +4,19 @@
     flake-utils = {
       url = "github:numtide/flake-utils";
     };
-    rust-overlay = {
-      url = "github:oxalica/rust-overlay";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs = {
     self,
     nixpkgs,
     flake-utils,
-    rust-overlay,
   }:
     flake-utils.lib.eachDefaultSystem (
       system: let
-        overlays = [(import rust-overlay)];
         pkgs = import nixpkgs {
-          inherit system overlays;
+          inherit system;
         };
-        name = "template";
+        name = "mltt";
         src = ./.;
       in {
         packages.default = derivation {
@@ -32,26 +26,16 @@
         };
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            clang
-            clang-tools
-            cmake
-            ninja
-            gnumake
-            lldb
-
-            haskell.compiler.ghc9101
-            haskell.packages.ghc9101.haskell-language-server
+            haskell.compiler.ghc912
+            haskell.packages.ghc912.haskell-language-server
+            haskellPackages.hoogle
+            haskellPackages.ghci-dap
+            haskellPackages.haskell-debug-adapter
+            haskellPackages.fast-tags
+            haskellPackages.cabal-fmt
+            haskellPackages.fourmolu
             cabal-install
-
-            (rust-bin.nightly.latest.default.override
-              {
-                extensions = [
-                  "rust-src"
-                  "rust-analyzer"
-                  "llvm-tools"
-                ];
-                # targets = [];
-              })
+            hlint
           ];
           shellHook = ''
             export SHELL=$(which zsh)
