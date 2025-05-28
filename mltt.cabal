@@ -60,7 +60,8 @@ library
 
     -- Modules exported by the library.
     exposed-modules:  
-      MLTT
+      MLTT.NbE
+      MLTT.NbS
 
     -- Modules included in this library but not exported.
     -- other-modules:

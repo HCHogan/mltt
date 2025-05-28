@@ -1,4 +1,4 @@
-module MLTT where
+module MLTT.NbS where
 
 import Data.Map qualified as Map
 import Effectful
