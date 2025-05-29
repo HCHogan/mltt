@@ -4,16 +4,7 @@ import Data.Map qualified as Map
 import Effectful
 import Effectful.Error.Static
 import Effectful.Reader.Static
-
-type Name = String
-
-data Expr
-  = Var Name
-  | Type Int
-  | Pi Name Expr Expr
-  | Lam Name Expr Expr
-  | App Expr Expr
-  deriving (Show, Eq)
+import MLTT.Syntax
 
 -- We can define some built-in type in the free variable context:
 -- [("Nat", Type 0), ("Zero", Var "Nat"), ("Succ", ...)]
