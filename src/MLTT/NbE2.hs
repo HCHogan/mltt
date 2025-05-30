@@ -10,7 +10,6 @@ import Effectful.Reader.Static
 import Effectful.State.Static.Local
 import MLTT.Syntax
 
--- 1. 纯中间值和中性项
 data PValue
   = PNe PNeutral
   | PType Int
