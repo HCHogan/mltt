@@ -3,6 +3,7 @@
 module MLTT.NbE2 where
 
 import Control.Lens
+import Control.Monad
 import Data.Map qualified as Map
 import Effectful
 import Effectful.Error.Static
@@ -128,42 +129,28 @@ infer = \case
   Type u -> return (PType $ u + 1)
   Pi x a b -> do
     ua <- isType a
-    vals <- asks (^. values)
-    case runEval vals a of
-      Right va -> do
-        ub <- local (addVar x va) $ isType b
-        return $ PType $ max ua ub
-      Left err -> throwError err
+    va <- asks (^. values) >>= either throwError pure . (`runEval` a)
+    ub <- local (addVar x va) (isType b)
+    pure $ PType (max ua ub)
   Lam x a b -> do
     _ <- isType a
     vals <- asks (^. values)
-    case runEval vals a of
-      Right va -> do
-        vb <- local (addVar x va) $ infer b
-        ns <- asks (^. names)
-        let exprb = runReify ns $ reify vb
-        return $
-          PPi
-            va
-            ( \v -> case runEval (Map.insert x v vals) exprb of
-                Right v' -> v'
-                Left err -> error err
-            )
-      Left err -> throwError err
+    va <- either throwError pure $ runEval vals a
+    vb <- local (addVar x va) (infer b)
+    ns <- asks (^. names)
+    let exprb = runReify ns (reify vb)
+    pure $ PPi va $ \v -> either error id $ runEval (Map.insert x v vals) exprb
   App a b -> do
     ta <- infer a
     tb <- infer b
-    case ta of
-      PPi vta vb -> do
-        flag <- valuesAreEqual vta tb
-        vals <- asks (^. values)
-        if flag
-          then case runEval vals b of
-            Right v -> return $ vb v
-            Left err -> throwError err
-          else
-            throwError "Type mismatch"
+    (vta, vb) <- case ta of
+      PPi vta vb -> pure (vta, vb)
       _ -> throwError "Expected a function type"
+    ok <- valuesAreEqual vta tb
+    unless ok $ throwError "Type mismatch"
+    vals <- asks (^. values)
+    v <- either throwError pure $ runEval vals b
+    pure $ vb v
 
 valuesAreEqual :: (Error String :> es, Reader Ctxt :> es) => PValue -> PValue -> Eff es Bool
 valuesAreEqual v1 v2 = do
