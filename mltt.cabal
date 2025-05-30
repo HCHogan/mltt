@@ -63,7 +63,6 @@ library
       MLTT.NbE
       MLTT.NbS
       MLTT.Syntax
-      MLTT.NbE2
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -76,7 +75,8 @@ library
       base ^>=4.21.0.0,
       containers,
       effectful,
-      lens
+      lens,
+      mtl,
 
     -- Directories containing source files.
     hs-source-dirs:   src
