@@ -124,10 +124,7 @@ addVar n typ ctx =
 infer :: (Reader Ctxt :> es, Error String :> es) => Expr -> Eff es PValue
 infer = \case
   Var x -> do
-    typs <- asks (^. types)
-    case Map.lookup x typs of
-      Just t -> return t
-      Nothing -> throwError $ "Variable not found: " ++ x
+    asks (^. types) >>= maybe (throwError $ "Variable not found: " ++ x) pure . Map.lookup x
   Type u -> return (PType $ u + 1)
   Pi x a b -> do
     ua <- isType a
