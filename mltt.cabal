@@ -75,7 +75,8 @@ library
     build-depends:    
       base ^>=4.21.0.0,
       containers,
-      effectful
+      effectful,
+      lens
 
     -- Directories containing source files.
     hs-source-dirs:   src

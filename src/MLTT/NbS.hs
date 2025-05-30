@@ -33,7 +33,8 @@ infer = \case
     t2 <- infer b
     case nt1 of
       Pi x a' b' -> do
-        if a' == t2
+        flag <- exprAreEqual a' t2
+        if flag
           then subst x b b'
           else throwError $ "Type mismatch in application: " ++ show t1 ++ " and " ++ show t2
       _ -> throwError $ "Expected a function type, but got: " ++ show t1
