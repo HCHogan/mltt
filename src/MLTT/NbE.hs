@@ -8,6 +8,7 @@ import Data.Map qualified as Map
 import Effectful
 import Effectful.Error.Static
 import Effectful.Reader.Static
+import Effectful.Reader.Static.Lens qualified as EL
 import Effectful.State.Static.Local
 import MLTT.Syntax
 
@@ -125,19 +126,19 @@ addVar n typ ctx =
 infer :: (Reader Ctxt :> es, Error String :> es) => Expr -> Eff es PValue
 infer = \case
   Var x -> do
-    asks (^. types) >>= maybe (throwError $ "Variable not found: " ++ x) pure . Map.lookup x
+    EL.view types >>= maybe (throwError $ "Variable not found: " ++ x) pure . Map.lookup x
   Type u -> return (PType $ u + 1)
   Pi x a b -> do
     ua <- isType a
-    va <- asks (^. values) >>= either throwError pure . (`runEval` a)
+    va <- EL.view values >>= either throwError pure . (`runEval` a)
     ub <- local (addVar x va) (isType b)
     pure $ PType (max ua ub)
   Lam x a b -> do
     _ <- isType a
-    vals <- asks (^. values)
+    vals <- EL.view values
     va <- either throwError pure $ runEval vals a
     vb <- local (addVar x va) (infer b)
-    ns <- asks (^. names)
+    ns <- EL.view names
     let exprb = runReify ns (reify vb)
     pure $ PPi va $ \v -> either error id $ runEval (Map.insert x v vals) exprb
   App a b -> do
@@ -148,13 +149,13 @@ infer = \case
       _ -> throwError "Expected a function type"
     ok <- valuesAreEqual vta tb
     unless ok $ throwError "Type mismatch"
-    vals <- asks (^. values)
+    vals <- EL.view values
     v <- either throwError pure $ runEval vals b
     pure $ vb v
 
 valuesAreEqual :: (Error String :> es, Reader Ctxt :> es) => PValue -> PValue -> Eff es Bool
 valuesAreEqual v1 v2 = do
-  ns <- asks (^. names)
+  ns <- EL.view names
   let e1 = runReify ns $ reify v1
   let e2 = runReify ns $ reify v2
   return $ e1 == e2

@@ -75,6 +75,7 @@ library
       base ^>=4.21.0.0,
       containers,
       effectful,
+      effectful-lens,
       lens,
       mtl,
 
